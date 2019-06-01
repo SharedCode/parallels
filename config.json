@@ -1,0 +1,17 @@
+
+{
+    "RedisConfig":{
+        "Address":"localhost:6379",
+        "Password":"",
+        "DB":0,
+        "DefaultDurationInSeconds": 86400
+    },
+    "CassandraConfig":{
+        "ClusterHosts":["localhost"],
+        "Keyspace": "btree",
+        "Consistency": "LOCAL_ONE",
+        "TableName": "key_value",
+        "NavigableTableName": "key_value_navigable",
+        "#Port": 9042
+    }
+}
