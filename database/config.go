@@ -1,4 +1,4 @@
-package parallels
+package database
 
 import (
 	"parallels/database/cache"

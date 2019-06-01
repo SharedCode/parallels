@@ -8,7 +8,7 @@
     },
     "CassandraConfig":{
         "ClusterHosts":["localhost"],
-        "Keyspace": "btree",
+        "Keyspace": "store",
         "Consistency": "LOCAL_ONE",
         "TableName": "key_value",
         "NavigableTableName": "key_value_navigable",

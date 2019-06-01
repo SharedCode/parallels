@@ -1,7 +1,7 @@
 package database
 
 import "testing"
-import "database/common"
+import "parallels/database/common"
 import "os"
 
 func TestUpsert(t *testing.T) {

@@ -4,7 +4,8 @@ import "encoding/json"
 import "bytes"
 import "testing"
 import "os"
-import "database/common"
+import "parallels/database/common"
+
 
 type BlobType int
 
@@ -31,7 +32,7 @@ func TestBasic(t *testing.T) {
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
-	BlobID2 := "166507"
+	BlobID2 := "166508"
 	rs = repoSet.Store.Upsert([]common.KeyValue{*common.NewKeyValue(Blob, BlobID2, BlobData)})
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
