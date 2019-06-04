@@ -9,9 +9,7 @@ import (
 
 // Options we send to(set a) Redis connection.
 type Options struct{
-	Address string
-	Password string	
-	DB int
+	RedisOptions *redis.UniversalOptions
 	DurationInSeconds int
 }
 
@@ -20,25 +18,16 @@ func (opt Options) GetDuration() time.Duration{
 }
 
 type Connection struct{
-	Client *redis.Client
+	Client redis.UniversalClient
 	Options Options
 }
 
 func DefaultOptions() Options {
-	return Options{
-		Address:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-		DurationInSeconds: 0,	// no expiration!
-	}
+	return Options{}
 }
 
-func NewClient(options Options) Connection {
-	client := redis.NewClient(&redis.Options{
-		Addr:     options.Address,
-		Password: options.Password,
-		DB:       options.DB})
-
+func newClient(options Options) Connection {
+	client := redis.NewUniversalClient(options.RedisOptions)
 	c := Connection{
 		Client : client,
 		Options: options,

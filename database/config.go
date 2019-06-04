@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/go-redis/redis"
 	"parallels/database/cache"
 	"parallels/database/store"
 	"encoding/json"
@@ -25,6 +26,9 @@ func LoadConfiguration(filename string) (Configuration, error) {
 	if err != nil {
 		return Configuration{}, err
 	}
-
+	// instantiates a Redis Universal Option that will connect to local host (default).
+	if c.RedisConfig.RedisOptions == nil {
+		c.RedisConfig.RedisOptions = &redis.UniversalOptions{}
+	}
 	return c, nil
 }

@@ -4,22 +4,22 @@ import "fmt"
 import "github.com/go-redis/redis"
 import "parallels/database/common"
 
-// Repository implementation for Redis based caching.
-type Repository struct {
+// RedisCache implementation for Redis based caching.
+type RedisCache struct {
 	redisConnection Connection
 }
 
-// NewRepository instantiates a cache Repository.
-func NewRepository(connection Connection) Repository {
-	return Repository{
-		redisConnection: connection,
+// NewRedisCache instantiates a cache Repository.
+func NewRedisCache(options Options) RedisCache {
+	return RedisCache{
+		redisConnection: newClient(options),
 	}
 }
 
 func format(entityType int, key string) string { return fmt.Sprintf("%d_%s", entityType, key) }
 
 // Upsert a set of entries to the cache.
-func (repo Repository) Upsert(kvps []common.KeyValue) common.ResultStatus {
+func (repo RedisCache) Upsert(kvps []common.KeyValue) common.ResultStatus {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	expiration := repo.redisConnection.Options.GetDuration()
 	for i := 0; i < len(kvps); i++ {
@@ -48,7 +48,7 @@ func extractError(e error, cmdErr []redis.Cmder) common.ResultStatus {
 }
 
 // Get retrieves a set of entries from the cache.
-func (repo Repository) Get(entityType int, keys []string) ([]common.KeyValue, common.ResultStatus) {
+func (repo RedisCache) Get(entityType int, keys []string) ([]common.KeyValue, common.ResultStatus) {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	m := map[string]*redis.StringCmd{}
 	for i := 0; i < len(keys); i++ {
@@ -79,7 +79,7 @@ func (repo Repository) Get(entityType int, keys []string) ([]common.KeyValue, co
 }
 
 // Delete a set of entries from the cache.
-func (repo Repository) Delete(entityType int, keys []string) common.ResultStatus {
+func (repo RedisCache) Delete(entityType int, keys []string) common.ResultStatus {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	for i := 0; i < len(keys); i++ {
 		pipeline.Del(format(entityType, keys[i]))

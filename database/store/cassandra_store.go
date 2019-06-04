@@ -5,7 +5,7 @@ import "time"
 import "github.com/gocql/gocql"
 import "parallels/database/common"
 
-type Repository struct {
+type cassandraStore struct {
 	Connection Connection
 	storeName  string
 }
@@ -20,7 +20,7 @@ func NewRepository(config Config) (common.Repository, error) {
 	return newRepository(config, false)
 }
 
-func newRepository(config Config, navigableStore bool) (Repository, error) {
+func newRepository(config Config, navigableStore bool) (cassandraStore, error) {
 	if config.TableName != "" {
 		storeNameLiteral = config.TableName
 	}
@@ -32,17 +32,17 @@ func newRepository(config Config, navigableStore bool) (Repository, error) {
 	if navigableStore {
 		sn = storeNameNavigableLiteral
 	}
-	return Repository{
+	return cassandraStore{
 		Connection: *c,
 		storeName:  sn,
 	}, e
 }
 
-func (repo Repository) isStoreNavigable() bool {
+func (repo cassandraStore) isStoreNavigable() bool {
 	return repo.storeName == storeNameNavigableLiteral
 }
 
-func (repo Repository) Upsert(kvps []common.KeyValue) common.ResultStatus {
+func (repo cassandraStore) Upsert(kvps []common.KeyValue) common.ResultStatus {
 	sql := fmt.Sprintf("UPDATE %s SET value=?, updated=?, is_del=false WHERE type=? AND key=?", repo.storeName)
 	now := time.Now()
 	if repo.isStoreNavigable() {
@@ -63,7 +63,7 @@ func (repo Repository) Upsert(kvps []common.KeyValue) common.ResultStatus {
 	return common.ResultStatus{}
 }
 
-func (repo Repository) Get(entityType int, keys []string) ([]common.KeyValue, common.ResultStatus) {
+func (repo cassandraStore) Get(entityType int, keys []string) ([]common.KeyValue, common.ResultStatus) {
 	inClause := ""
 	for _, k := range keys {
 		key := "'" + k + "'"
@@ -94,7 +94,7 @@ func (repo Repository) Get(entityType int, keys []string) ([]common.KeyValue, co
 	return kvps, common.ResultStatus{}
 }
 
-func (repo Repository) Delete(entityType int, keys []string) common.ResultStatus {
+func (repo cassandraStore) Delete(entityType int, keys []string) common.ResultStatus {
 	sql := fmt.Sprintf("UPDATE %s SET updated=?, is_del=true WHERE type=? AND key=?", repo.storeName)
 	now := time.Now()
 	if repo.isStoreNavigable() {
@@ -113,9 +113,9 @@ func (repo Repository) Delete(entityType int, keys []string) common.ResultStatus
 	return common.ResultStatus{}
 }
 
-func (repo Repository) Navigate(entityType int, filter common.Filter) ([]common.KeyValue, common.ResultStatus) {
+func (repo cassandraStore) Navigate(entityType int, filter common.Filter) ([]common.KeyValue, common.ResultStatus) {
 	if !repo.isStoreNavigable() {
-		return nil, common.ResultStatus{Error: fmt.Errorf("Repository is not navigable. Pls. specify navigable 'true' during instantiation of Repository to use/access a Navigable Repository")}
+		return nil, common.ResultStatus{Error: fmt.Errorf("Repository is not navigable.")}
 	}
 
 	sql := "SELECT key, value, is_del FROM %s WHERE type=? AND key > ?"

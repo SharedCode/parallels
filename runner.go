@@ -14,6 +14,7 @@ type ActionResult struct{
 	Result []byte
 	Error error
 }
+
 func (r ActionResult) IsSuccessful() bool{
 	return r.Error == nil
 }
@@ -55,7 +56,7 @@ func (runner Runner) ScatterAndGather(batchActionData [][]byte, actionName strin
 }
 
 func (runner Runner) WaitUntilGathered(resultCount int, ch chan ActionResult) ([]ActionResult, error){
-	r2 := make([]ActionResult, resultCount)
+	r2 := make([]ActionResult, 0, resultCount)
 	for i := 0; i < resultCount; i++{
 		result := <- ch
 		r2 = append(r2, result)
