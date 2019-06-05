@@ -7,6 +7,15 @@ type ResultStatus struct{
 	Details interface{}
 }
 
+type UpsertFailDetail struct{
+	KeyValue KeyValue
+	Error error
+}
+type DeleteFailDetail struct{
+	Key string
+	Error error
+}
+
 // IsSuccessful returns false if result status signifies failure.
 func (result ResultStatus) IsSuccessful() bool{
 	return result.Error == nil

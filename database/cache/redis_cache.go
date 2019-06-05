@@ -23,11 +23,7 @@ func (repo RedisCache) Upsert(kvps []common.KeyValue) common.ResultStatus {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	expiration := repo.redisConnection.Options.GetDuration()
 	for i := 0; i < len(kvps); i++ {
-		e := pipeline.Set(format(kvps[i].Type, kvps[i].Key), kvps[i].Value, expiration).Err()
-		if e != nil {
-			// stop and return right away (for now) if an error is encountered.
-			return common.ResultStatus{Error: e}
-		}
+		pipeline.Set(format(kvps[i].Type, kvps[i].Key), kvps[i].Value, expiration)
 	}
 	// execute the batched upserts.
 	cmdErr, e := pipeline.Exec()

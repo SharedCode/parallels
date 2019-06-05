@@ -53,14 +53,20 @@ func (repo cassandraStore) Upsert(kvps []common.KeyValue) common.ResultStatus {
 		return common.ResultStatus{Error: repo.Connection.Session.ExecuteBatch(b)}
 	}
 	// INSERT NOT using "batch" as batching in a "Key" that is a Partition Key, is anti-pattern(slows Cassandra down).
+	var failedItems []common.UpsertFailDetail
 	for _, kvp := range kvps {
 		e := repo.Connection.Session.Query(sql, kvp.Value, now, kvp.Type, kvp.Key).Exec()
 		if e != nil {
-			// for now, it is all or nothing (if error, return error and fail rest of batch).
-			return common.ResultStatus{Error: e}
+			failedItems = append(failedItems, common.UpsertFailDetail{KeyValue: kvp, Error: e})
 		}
 	}
-	return common.ResultStatus{}
+	if failedItems == nil{
+		return common.ResultStatus{}
+	}
+	return common.ResultStatus{
+		Error: fmt.Errorf("Upsert failed upserting items, see Details on which ones failed"), 
+		Details: failedItems,
+	}
 }
 
 func (repo cassandraStore) Get(entityType int, keys []string) ([]common.KeyValue, common.ResultStatus) {
@@ -104,13 +110,20 @@ func (repo cassandraStore) Delete(entityType int, keys []string) common.ResultSt
 		}
 		return common.ResultStatus{Error: repo.Connection.Session.ExecuteBatch(b)}
 	}
+	var failedItems []common.DeleteFailDetail
 	for _, key := range keys {
 		e := repo.Connection.Session.Query(sql, now, entityType, key).Exec()
 		if e != nil {
-			return common.ResultStatus{Error: e}
+			failedItems = append(failedItems, common.DeleteFailDetail{Key: key, Error: e})
 		}
 	}
-	return common.ResultStatus{}
+	if failedItems == nil{
+		return common.ResultStatus{}
+	}
+	return common.ResultStatus{
+		Error: fmt.Errorf("Delete failed removing items, see Details on which ones failed"), 
+		Details: failedItems,
+	}
 }
 
 func (repo cassandraStore) Navigate(entityType int, filter common.Filter) ([]common.KeyValue, common.ResultStatus) {
