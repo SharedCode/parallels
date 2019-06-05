@@ -13,7 +13,7 @@ func NewL1L2Sync(l1Cache Repository, l2Cache Repository) Repository {
 	}
 }
 
-func (repo l1l2Store) Upsert(kvps []KeyValue) ResultStatus {
+func (repo l1l2Store) Upsert(kvps []KeyValue) Result {
 	// we rely on idea that if L2 Cache/Store succeeds, THEN it is most likely, mgmt
 	// is safe to be done on L1 Cache. todo: prove this is NOT then implement "locking"!
 	e := repo.L2Cache.Upsert(kvps)
@@ -25,13 +25,13 @@ func (repo l1l2Store) Upsert(kvps []KeyValue) ResultStatus {
 		return e
 	} else if e.Details != nil {
 		failedUpserts := e.Details.([]UpsertFailDetail)
-		if failedUpserts == nil || len(failedUpserts) == 0{
+		if failedUpserts == nil || len(failedUpserts) == 0 {
 			return e
 		}
-		nkvps := make([]KeyValue,0, len(failedUpserts))
-		for _,d := range kvps{
+		nkvps := make([]KeyValue, 0, len(failedUpserts))
+		for _, d := range kvps {
 			// skip items that failed upsert as they are not persisted to L2 Cache
-			if itemExists(d, failedUpserts){
+			if itemExists(d, failedUpserts) {
 				continue
 			}
 			nkvps = append(nkvps, d)
@@ -42,14 +42,14 @@ func (repo l1l2Store) Upsert(kvps []KeyValue) ResultStatus {
 	return e
 }
 
-func (repo l1l2Store) Get(entityType int, keys []string) ([]KeyValue, ResultStatus) {
+func (repo l1l2Store) Get(entityType int, keys []string) ([]KeyValue, Result) {
 	v, e := repo.L1Cache.Get(entityType, keys)
 	if v != nil || !e.IsSuccessful() {
 		return v, e
 	}
 	v, e = repo.L2Cache.Get(entityType, keys)
 	if v == nil && e.IsSuccessful() {
-		return nil, ResultStatus{}
+		return nil, Result{}
 	}
 	if e.IsSuccessful() {
 		return v, repo.L1Cache.Upsert(v)
@@ -57,19 +57,19 @@ func (repo l1l2Store) Get(entityType int, keys []string) ([]KeyValue, ResultStat
 	return v, e
 }
 
-func (repo l1l2Store) Delete(entityType int, keys []string) ResultStatus {
+func (repo l1l2Store) Delete(entityType int, keys []string) Result {
 	e := repo.L2Cache.Delete(entityType, keys)
 	if e.IsSuccessful() {
 		return repo.L1Cache.Delete(entityType, keys)
 	} else if e.Details != nil {
 		failedDeletes := e.Details.([]DeleteFailDetail)
-		if failedDeletes == nil || len(failedDeletes) == 0{
+		if failedDeletes == nil || len(failedDeletes) == 0 {
 			return e
 		}
-		keys := make([]string,0, len(failedDeletes))
-		for _,k := range keys{
+		keys := make([]string, 0, len(failedDeletes))
+		for _, k := range keys {
 			// skip items that failed delete as they are not persisted to L2 Cache
-			if itemKeyExists(k, failedDeletes){
+			if itemKeyExists(k, failedDeletes) {
 				continue
 			}
 			keys = append(keys, k)
@@ -80,16 +80,16 @@ func (repo l1l2Store) Delete(entityType int, keys []string) ResultStatus {
 	return e
 }
 
-func (repo l1l2Store)deleteFromL1Cache(kvps []KeyValue){
-	keys := make([]string,0,len(kvps))
+func (repo l1l2Store) deleteFromL1Cache(kvps []KeyValue) {
+	keys := make([]string, 0, len(kvps))
 	var entityType int
 	sameTypes := true
-	for i,kvp := range kvps{
+	for i, kvp := range kvps {
 		keys = append(keys, kvp.Key)
 		if i == 0 {
 			entityType = kvp.Type
 			continue
-		} else if entityType != kvp.Type{
+		} else if entityType != kvp.Type {
 			sameTypes = false
 		}
 	}
@@ -97,23 +97,23 @@ func (repo l1l2Store)deleteFromL1Cache(kvps []KeyValue){
 		repo.L1Cache.Delete(entityType, keys)
 		return
 	}
-	for _,kvp := range kvps{
+	for _, kvp := range kvps {
 		repo.L1Cache.Delete(kvp.Type, []string{kvp.Key})
 	}
 	return
 }
 
-func itemExists(kvp KeyValue, kvps []UpsertFailDetail) bool{
-	for i := range kvps{
-		if kvp.Key == kvps[i].KeyValue.Key{
+func itemExists(kvp KeyValue, kvps []UpsertFailDetail) bool {
+	for i := range kvps {
+		if kvp.Key == kvps[i].KeyValue.Key {
 			return true
 		}
 	}
 	return false
 }
-func itemKeyExists(key string, kvps []DeleteFailDetail) bool{
-	for i := range kvps{
-		if key == kvps[i].Key{
+func itemKeyExists(key string, kvps []DeleteFailDetail) bool {
+	for i := range kvps {
+		if key == kvps[i].Key {
 			return true
 		}
 	}

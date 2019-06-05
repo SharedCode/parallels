@@ -20,7 +20,7 @@ func TestUpsert(t *testing.T) {
 	}
 }
 
-func upsertData(repo common.Repository) common.ResultStatus {
+func upsertData(repo common.Repository) common.Result {
 	return repo.Upsert([]common.KeyValue{
 		*common.NewKeyValue(0, "K1", []byte("testV")),
 	})

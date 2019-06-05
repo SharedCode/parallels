@@ -15,7 +15,7 @@ type NavigableRepository interface {
 	// Navigate retrieves a set of data given its type classification (entityType)
 	// and filter criteria. See Filter struct for filter definition.
 	// Conditional filter such as Greater than or Less than Key is the typical use-case.
-	Navigate(entityType int, filter Filter) ([]KeyValue, ResultStatus)
+	Navigate(entityType int, filter Filter) ([]KeyValue, Result)
 }
 
 // RepositorySet contains all available Repositories from a backend DB.
