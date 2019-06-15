@@ -1,31 +1,31 @@
 package database
 
-import "parallels/database/common"
-import "parallels/database/cache"
-import "parallels/database/store"
+import "github.com/SharedCode/parallels/database/repository"
+import "github.com/SharedCode/parallels/database/cache"
+import "github.com/SharedCode/parallels/database/store"
 
 // NewRepositorySet instantiates a new RepositorySet given a configuration.
-func NewRepositorySet(configuration Configuration) (common.RepositorySet, error) {
-	l1,e := NewRepository(configuration)
-	if e != nil{
-		return common.RepositorySet{},e
+func NewRepositorySet(configuration Configuration) (repository.RepositorySet, error) {
+	s1, e := NewRepository(configuration)
+	if e != nil {
+		return repository.RepositorySet{}, e
 	}
-	l2,e := store.NewNavigableRepository(configuration.CassandraConfig)
-	if e != nil{
-		return common.RepositorySet{},e
+	s2, e := store.NewNavigableRepository(configuration.CassandraConfig)
+	if e != nil {
+		return repository.RepositorySet{}, e
 	}
-	return common.RepositorySet{
-		Store: l1,
-		NavigableStore: l2,
+	return repository.RepositorySet{
+		Store:          s1,
+		NavigableStore: s2,
 	}, nil
 }
 
 // NewRepository instantiates a new Repository with Caching enabled.
-func NewRepository(configuration Configuration) (common.Repository, error) {
+func NewRepository(configuration Configuration) (repository.Repository, error) {
 	repo, e := store.NewRepository(configuration.CassandraConfig)
 	if e != nil {
 		return nil, e
 	}
 	cache := cache.NewRedisCache(configuration.RedisConfig)
-	return common.NewL1L2Sync(cache, repo), nil
+	return repository.NewL1L2CacheSync(cache, repo), nil
 }

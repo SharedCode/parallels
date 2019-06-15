@@ -1,10 +1,10 @@
 package parallels
 
-import "parallels/database/cache"
-import "parallels/database/common"
+//import "github.com/SharedCode/parallels/database/cache"
+import "github.com/SharedCode/parallels/database/repository"
 
 type Runner struct{
-	Store common.Repository
+	Store repository.Repository
 	Dispatcher Processor
 }
 
@@ -31,10 +31,10 @@ type JobSourcer interface{
 type Processor func(actionData []byte, actionName string) error
 
 // NewRunner creates a new Runner instance.
-func NewRunner(c common.Repository, dispatcher Processor) Runner{
+func NewRunner(c repository.Repository, dispatcher Processor) Runner{
 	// assign an in-memory cache if cache is nil. todo: finalize whether we need this!
 	if c == nil {
-		c = cache.NewMemoryCache()
+		//c = cache.NewMemoryCache()
 	}
 	return Runner{
 		Store : c,

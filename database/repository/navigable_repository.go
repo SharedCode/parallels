@@ -1,4 +1,4 @@
-package common
+package repository
 
 // Filter specifies a given filter criteria, typically used for data retrieval/navigation.
 type Filter struct {
@@ -9,21 +9,18 @@ type Filter struct {
 	LessThanKey bool
 }
 
-// NavigableRepository is a Repository with add'l method allowing data retrieval via navigable expressions.
+// NavigableRepository is a Repository with add'l method allowing data retrieval 
+// via navigable expressions.
 type NavigableRepository interface {
-	Repository
+	// Set a set of KeyValue entries to the DB.
+	Set(kvps ...GroupKeyValue) Result
+	// Get retrieves a set of KeyValue entries from DB
+	// given a set of Keys.
+	Get(entityType int, group string, keys ...string) ([]GroupKeyValue, Result)
+	// Remove a set of entries in DB given a set of Keys.
+	Remove(entityType int, group string, keys ...string) Result
 	// Navigate retrieves a set of data given its type classification (entityType)
 	// and filter criteria. See Filter struct for filter definition.
 	// Conditional filter such as Greater than or Less than Key is the typical use-case.
-	Navigate(entityType int, filter Filter) ([]KeyValue, Result)
-}
-
-// RepositorySet contains all available Repositories from a backend DB.
-type RepositorySet struct {
-	// Store is the default Entity Repository.
-	Store Repository
-
-	// NavigableStore is another Repository that entries of which, can be queried or filtered
-	// for more advanced retrieval or rows' "navigation" use-case.
-	NavigableStore NavigableRepository
+	Navigate(entityType int, group string, filter Filter) ([]GroupKeyValue,Result)
 }

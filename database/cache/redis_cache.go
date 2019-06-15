@@ -2,7 +2,7 @@ package cache
 
 import "fmt"
 import "github.com/go-redis/redis"
-import "parallels/database/common"
+import "github.com/SharedCode/parallels/database/repository"
 
 // RedisCache implementation for Redis based caching.
 type RedisCache struct {
@@ -16,10 +16,8 @@ func NewRedisCache(options Options) RedisCache {
 	}
 }
 
-func format(entityType int, key string) string { return fmt.Sprintf("%d_%s", entityType, key) }
-
-// Upsert a set of entries to the cache.
-func (repo RedisCache) Upsert(kvps []common.KeyValue) common.Result {
+// Set a set of entries to the cache.
+func (repo RedisCache) Set(kvps ...repository.KeyValue) repository.Result {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	expiration := repo.redisConnection.Options.GetDuration()
 	for i := 0; i < len(kvps); i++ {
@@ -30,21 +28,8 @@ func (repo RedisCache) Upsert(kvps []common.KeyValue) common.Result {
 	return extractError(e, cmdErr)
 }
 
-func extractError(e error, cmdErr []redis.Cmder) common.Result {
-	if e == nil && cmdErr != nil && len(cmdErr) >= 1 {
-		if len(cmdErr) == 1 {
-			err := cmdErr[0].Err()
-			if err == nil {
-				return common.Result{}
-			}
-		}
-		e = fmt.Errorf("Error was encountered while working on the batch. See Details for more info")
-	}
-	return common.Result{Error: e, Details: cmdErr}
-}
-
 // Get retrieves a set of entries from the cache.
-func (repo RedisCache) Get(entityType int, keys []string) ([]common.KeyValue, common.Result) {
+func (repo RedisCache) Get(entityType int, keys ...string) ([]repository.KeyValue, repository.Result) {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	m := map[string]*redis.StringCmd{}
 	for i := 0; i < len(keys); i++ {
@@ -53,34 +38,49 @@ func (repo RedisCache) Get(entityType int, keys []string) ([]common.KeyValue, co
 	// execute the batched upserts.
 	cmdErr, e := pipeline.Exec()
 	if e == redis.Nil {
-		return nil, common.Result{}
+		return nil, repository.Result{}
 	}
 	if e != nil {
-		return nil, common.Result{Error: e, Details: cmdErr}
+		return nil, repository.Result{Error: e, Details: cmdErr}
 	}
 	// process all returned results from the Server.
-	var values []common.KeyValue
+	var values []repository.KeyValue
 	for k, v := range m {
 		res, e := v.Result()
 		if e != nil && e != redis.Nil {
-			return nil, common.Result{Error: e, Details: cmdErr}
+			return nil, repository.Result{Error: e, Details: cmdErr}
 		}
 		cmdErr = nil
 		if values == nil {
-			values = make([]common.KeyValue, 0, len(keys))
+			values = make([]repository.KeyValue, 0, len(keys))
 		}
-		values = append(values, *common.NewKeyValue(entityType, k, []byte(res)))
+		values = append(values, *repository.NewKeyValue(entityType, k, []byte(res)))
 	}
-	return values, common.Result{Details: cmdErr}
+	return values, repository.Result{Details: cmdErr}
 }
 
-// Delete a set of entries from the cache.
-func (repo RedisCache) Delete(entityType int, keys []string) common.Result {
+// Remove a set of entries from the cache.
+func (repo RedisCache) Remove(entityType int, keys ...string) repository.Result {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	for i := 0; i < len(keys); i++ {
 		pipeline.Del(format(entityType, keys[i]))
 	}
 	// execute the batched deletes.
 	cmdErr, e := pipeline.Exec()
-	return common.Result{Error: e, Details: cmdErr}
+	return repository.Result{Error: e, Details: cmdErr}
 }
+
+func extractError(e error, cmdErr []redis.Cmder) repository.Result {
+	if e == nil && cmdErr != nil && len(cmdErr) >= 1 {
+		if len(cmdErr) == 1 {
+			err := cmdErr[0].Err()
+			if err == nil {
+				return repository.Result{}
+			}
+		}
+		e = fmt.Errorf("Error was encountered while working on the batch. See Details for more info")
+	}
+	return repository.Result{Error: e, Details: cmdErr}
+}
+
+func format(entityType int, key string) string { return fmt.Sprintf("%d_%s", entityType, key) }

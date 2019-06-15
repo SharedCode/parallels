@@ -13,7 +13,7 @@ func TestNullUpsert(t *testing.T) {
 	if e != nil {
 		t.Error(e)
 	}
-	rs := repo.Upsert(nil)
+	rs := repo.Set(nil...)
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
@@ -29,7 +29,7 @@ func TestNullGet(t *testing.T) {
 	if e != nil {
 		t.Error(e)
 	}
-	_, rs := repo.Get(0, nil)
+	_,rs := repo.Get(0, "")
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
@@ -45,7 +45,7 @@ func TestNullDelete(t *testing.T) {
 	if e != nil {
 		t.Error(e)
 	}
-	rs := repo.Delete(0, nil)
+	rs := repo.Remove(0, "")
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}

@@ -2,8 +2,8 @@ package database
 
 import (
 	"github.com/go-redis/redis"
-	"parallels/database/cache"
-	"parallels/database/store"
+	"github.com/SharedCode/parallels/database/cache"
+	"github.com/SharedCode/parallels/database/store"
 	"encoding/json"
 	"io/ioutil"
 )

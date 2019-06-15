@@ -1,7 +1,7 @@
 package database
 
 import "testing"
-import "parallels/database/common"
+import "github.com/SharedCode/parallels/database/repository"
 import "os"
 
 func TestUpsert(t *testing.T) {
@@ -20,10 +20,9 @@ func TestUpsert(t *testing.T) {
 	}
 }
 
-func upsertData(repo common.Repository) common.Result {
-	return repo.Upsert([]common.KeyValue{
-		*common.NewKeyValue(0, "K1", []byte("testV")),
-	})
+func upsertData(repo repository.Repository) repository.Result {
+	rs := repo.Set(*repository.NewKeyValue(0, "K1", []byte("testV")))
+	return rs
 }
 
 func TestRead(t *testing.T) {
@@ -36,15 +35,19 @@ func TestRead(t *testing.T) {
 	if e != nil {
 		t.Error(e)
 	}
-	// ensure we have data to read
-	upsertData(repo)
 
-	r, rs := repo.Get(0, []string{"K1"})
+	// ensure we have data to read
+	//upsertData(repo)
+
+	r,rs := repo.Get(0, "K1")
 	if r != nil {
 		if string(r[0].Value) != "testV" {
 			t.FailNow()
 		}
+	} else {
+		t.Error("K1 did not read from Store.")		
 	}
+
 	if rs.Error != nil {
 		t.Error(rs.Error)
 	}
@@ -63,15 +66,15 @@ func TestDelete(t *testing.T) {
 	// ensure we have data to read
 	upsertData(repo)
 
-	rs := repo.Delete(0, []string{"K1"})
+	rs := repo.Remove(0, "K1")
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
-	r, rs := repo.Get(0, []string{"K1"})
+	gr,rs := repo.Get(0, "K1")
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
-	if r != nil {
+	if gr != nil {
 		t.Errorf("Expected K1 row to be deleted, but still found.")
 	}
 }
@@ -94,7 +97,7 @@ func TestNavigation(t *testing.T) {
 	}
 
 	// navigate to retrieve 1st "batch".
-	r, rs := repoSet.NavigableStore.Navigate(0, common.Filter{})
+	r,rs := repoSet.NavigableStore.Navigate(0, repository.Filter{})
 	if rs.Error != nil {
 		t.Error(rs.Error)
 	}
@@ -126,11 +129,11 @@ func TestNavigableDelete(t *testing.T) {
 	// ensure we have data to read
 	upsertData(repo)
 
-	rs := repo.Delete(0, []string{"K1"})
+	rs := repo.Remove(0, "K1")
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
-	r, rs := repo.Get(0, []string{"K1"})
+	r,rs := repo.Get(0, "K1")
 	if rs.Error != nil {
 		t.Error(rs.Error)
 	}
