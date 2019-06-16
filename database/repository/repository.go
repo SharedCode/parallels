@@ -6,7 +6,7 @@ type Repository interface {
 	Set(kvps ...KeyValue) Result
 	// Get retrieves a set of KeyValue entries from DB
 	// given a set of Keys.
-	Get(entityType int, keys ...string) ([]KeyValue, Result)
+	Get(group string, keys ...string) ([]KeyValue, Result)
 	// Remove a set of entries in DB given a set of Keys.
-	Remove(entityType int, keys ...string) Result
+	Remove(group string, keys ...string) Result
 }

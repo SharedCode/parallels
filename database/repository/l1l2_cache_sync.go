@@ -47,12 +47,12 @@ func (repo l1l2Store) Set(kvps ...KeyValue) Result {
 	return e
 }
 
-func (repo l1l2Store) Get(entityType int, keys ...string) ([]KeyValue, Result) {
-	kvps, result := repo.L1Cache.Get(entityType, keys...)
+func (repo l1l2Store) Get(group string, keys ...string) ([]KeyValue, Result) {
+	kvps, result := repo.L1Cache.Get(group, keys...)
 	if kvps != nil || !result.IsSuccessful() {
 		return kvps, result
 	}
-	kvps, result = repo.L2Cache.Get(entityType, keys...)
+	kvps, result = repo.L2Cache.Get(group, keys...)
 	if kvps == nil && result.IsSuccessful() {
 		return nil, Result{}
 	}
@@ -64,10 +64,10 @@ func (repo l1l2Store) Get(entityType int, keys ...string) ([]KeyValue, Result) {
 	return kvps, result
 }
 
-func (repo l1l2Store) Remove(entityType int, keys ...string) Result {
-	result := repo.L2Cache.Remove(entityType, keys...)
+func (repo l1l2Store) Remove(group string, keys ...string) Result {
+	result := repo.L2Cache.Remove(group, keys...)
 	if result.IsSuccessful() {
-		repo.L1Cache.Remove(entityType, keys...)
+		repo.L1Cache.Remove(group, keys...)
 	} else if result.Details != nil {
 		failedDeletes := result.Details.([]DeleteFailDetail)
 		if failedDeletes == nil || len(failedDeletes) == 0 {
@@ -83,30 +83,30 @@ func (repo l1l2Store) Remove(entityType int, keys ...string) Result {
 		}
 		// sync L1 Cache with items that succeeded to L2 Cache delete,
 		// intentionally ignore errors on L1 Cache.
-		repo.L1Cache.Remove(entityType, nkeys...)
+		repo.L1Cache.Remove(group, nkeys...)
 	}
 	return result
 }
 
 func (repo l1l2Store) deleteFromL1Cache(kvps ...KeyValue) Result {
 	keys := make([]string, 0, len(kvps))
-	var entityType int
+	var group string
 	sameTypes := true
 	for i, kvp := range kvps {
 		keys = append(keys, kvp.Key)
 		if i == 0 {
-			entityType = kvp.Type
+			group = kvp.Group
 			continue
-		} else if entityType != kvp.Type {
+		} else if group != kvp.Group {
 			sameTypes = false
 		}
 	}
 	if sameTypes {
-		return repo.L1Cache.Remove(entityType, keys...)
+		return repo.L1Cache.Remove(group, keys...)
 	}
 	errors := make([]Result, len(kvps))
 	for _, kvp := range kvps {
-		r := repo.L1Cache.Remove(kvp.Type, kvp.Key)
+		r := repo.L1Cache.Remove(kvp.Group, kvp.Key)
 		if !r.IsSuccessful() {
 			errors = append(errors, r)
 		}

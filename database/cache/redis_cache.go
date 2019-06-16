@@ -21,7 +21,7 @@ func (repo RedisCache) Set(kvps ...repository.KeyValue) repository.Result {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	expiration := repo.redisConnection.Options.GetDuration()
 	for i := 0; i < len(kvps); i++ {
-		pipeline.Set(format(kvps[i].Type, kvps[i].Key), kvps[i].Value, expiration)
+		pipeline.Set(format(kvps[i].Group, kvps[i].Key), kvps[i].Value, expiration)
 	}
 	// execute the batched upserts.
 	cmdErr, e := pipeline.Exec()
@@ -29,11 +29,11 @@ func (repo RedisCache) Set(kvps ...repository.KeyValue) repository.Result {
 }
 
 // Get retrieves a set of entries from the cache.
-func (repo RedisCache) Get(entityType int, keys ...string) ([]repository.KeyValue, repository.Result) {
+func (repo RedisCache) Get(group string, keys ...string) ([]repository.KeyValue, repository.Result) {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	m := map[string]*redis.StringCmd{}
 	for i := 0; i < len(keys); i++ {
-		m[keys[i]] = pipeline.Get(format(entityType, keys[i]))
+		m[keys[i]] = pipeline.Get(format(group, keys[i]))
 	}
 	// execute the batched upserts.
 	cmdErr, e := pipeline.Exec()
@@ -54,16 +54,16 @@ func (repo RedisCache) Get(entityType int, keys ...string) ([]repository.KeyValu
 		if values == nil {
 			values = make([]repository.KeyValue, 0, len(keys))
 		}
-		values = append(values, *repository.NewKeyValue(entityType, k, []byte(res)))
+		values = append(values, *repository.NewKeyValue(group, k, []byte(res)))
 	}
 	return values, repository.Result{Details: cmdErr}
 }
 
 // Remove a set of entries from the cache.
-func (repo RedisCache) Remove(entityType int, keys ...string) repository.Result {
+func (repo RedisCache) Remove(group string, keys ...string) repository.Result {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	for i := 0; i < len(keys); i++ {
-		pipeline.Del(format(entityType, keys[i]))
+		pipeline.Del(format(group, keys[i]))
 	}
 	// execute the batched deletes.
 	cmdErr, e := pipeline.Exec()
@@ -83,4 +83,4 @@ func extractError(e error, cmdErr []redis.Cmder) repository.Result {
 	return repository.Result{Error: e, Details: cmdErr}
 }
 
-func format(entityType int, key string) string { return fmt.Sprintf("%d_%s", entityType, key) }
+func format(group string, key string) string { return fmt.Sprintf("%d_%s", group, key) }
