@@ -6,12 +6,11 @@ import "os"
 import "encoding/json"
 import "github.com/SharedCode/parallels/database/repository"
 
-type AlbumType int
-
+type GroupType string
 const (
-	Unclassified = iota
-	Album
-	Checkpoint
+	Unclassified = ""
+	Album = "album"
+	Checkpoint = "checkpoint"
 )
 
 func TestBasic(t *testing.T) {

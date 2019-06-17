@@ -12,6 +12,7 @@ type Filter struct {
 // NavigableRepository is a Repository with add'l method allowing data retrieval
 // via navigable expressions.
 type NavigableRepository interface {
+	Repository
 	// Navigate retrieves a set of data given its type classification (group)
 	// and filter criteria. See Filter struct for filter definition.
 	// Conditional filter such as Greater than or Less than Key is the typical use-case.

@@ -2,7 +2,7 @@ package repository
 
 // KeyValue struct
 type KeyValue struct {
-	// (optional) Group is used to specify a data grouping construct.
+	// Group is used to specify a grouping construct.
 	// Example, Entity Type, Time Series like hour, day, week value, etc...
 	Group string
 	// Key of the Entity.
