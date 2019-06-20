@@ -39,11 +39,11 @@ package cache
 // }
 
 // // Get retrieves a set of KeyValue entries from DB given a set of Keys.
-// func (repo MemoryCache) Get(group string, keys []string) ([]repository.KeyValue, repository.Result) {
+// func (repo MemoryCache) Get(entityType int, keys []string) ([]repository.KeyValue, repository.Result) {
 // 	return nil, repository.Result{}
 // }
 
 // // Remove a set of entries in DB given a set of Keys.
-// func (repo MemoryCache) Remove(group string, keys []string) repository.Result {
+// func (repo MemoryCache) Remove(entityType int, keys []string) repository.Result {
 // 	return repository.Result{}
 // }

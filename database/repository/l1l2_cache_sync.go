@@ -7,7 +7,7 @@ type l1l2Store struct {
 	L2Cache Repository
 }
 
-// NewL1L2CacheSync instantiates a new L1-L2 cache/store "synchronizer" as Repository.
+// NewL1L2CacheSync instantiates a new L1-L2 cache/cassandra "synchronizer" as Repository.
 func NewL1L2CacheSync(l1Cache Repository, l2Cache Repository) Repository {
 	return l1l2Store{
 		L1Cache: l1Cache,
@@ -27,8 +27,8 @@ func (repo l1l2Store) Set(kvps ...KeyValue) Result {
 			repo.deleteFromL1Cache(kvps...)
 		}
 		return e
-	} else if e.Details != nil {
-		failedUpserts := e.Details.([]UpsertFailDetail)
+	} else if e.ErrorDetails != nil {
+		failedUpserts := e.ErrorDetails.([]UpsertFailDetail)
 		if failedUpserts == nil || len(failedUpserts) == 0 {
 			return e
 		}
@@ -68,9 +68,10 @@ func (repo l1l2Store) Remove(group string, keys ...string) Result {
 	result := repo.L2Cache.Remove(group, keys...)
 	if result.IsSuccessful() {
 		repo.L1Cache.Remove(group, keys...)
-	} else if result.Details != nil {
-		failedDeletes := result.Details.([]DeleteFailDetail)
+	} else if result.ErrorDetails != nil {
+		failedDeletes := result.ErrorDetails.([]DeleteFailDetail)
 		if failedDeletes == nil || len(failedDeletes) == 0 {
+			repo.L1Cache.Remove(group, keys...)
 			return result
 		}
 		nkeys := make([]string, 0, len(failedDeletes))
@@ -114,7 +115,7 @@ func (repo l1l2Store) deleteFromL1Cache(kvps ...KeyValue) Result {
 	if len(errors) == 0 {
 		return Result{}
 	}
-	return Result{Error: fmt.Errorf("Remove from cache encountered failure, see Result.Details"), Details: errors}
+	return Result{Error: fmt.Errorf("Remove from cache encountered failure, see Result.ErrorDetails"), ErrorDetails: errors}
 }
 
 func itemExists(kvp KeyValue, kvps []UpsertFailDetail) bool {

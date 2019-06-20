@@ -1,8 +1,10 @@
 package database
 
-import "github.com/SharedCode/parallels/database/repository"
-import "github.com/SharedCode/parallels/database/cache"
-import "github.com/SharedCode/parallels/database/store"
+import (
+	"github.com/SharedCode/parallels/database/cache"
+	"github.com/SharedCode/parallels/database/cassandra"
+	"github.com/SharedCode/parallels/database/repository"
+)
 
 // NewRepositorySet instantiates a new RepositorySet given a configuration.
 func NewRepositorySet(configuration Configuration) (repository.RepositorySet, error) {
@@ -10,7 +12,7 @@ func NewRepositorySet(configuration Configuration) (repository.RepositorySet, er
 	if e != nil {
 		return repository.RepositorySet{}, e
 	}
-	s2, e := store.NewNavigableRepository(configuration.CassandraConfig)
+	s2, e := cassandra.NewNavigableRepository(configuration.CassandraConfig)
 	if e != nil {
 		return repository.RepositorySet{}, e
 	}
@@ -22,7 +24,7 @@ func NewRepositorySet(configuration Configuration) (repository.RepositorySet, er
 
 // NewRepository instantiates a new Repository with Caching enabled.
 func NewRepository(configuration Configuration) (repository.Repository, error) {
-	repo, e := store.NewRepository(configuration.CassandraConfig)
+	repo, e := cassandra.NewRepository(configuration.CassandraConfig)
 	if e != nil {
 		return nil, e
 	}

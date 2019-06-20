@@ -4,8 +4,6 @@ import "testing"
 import "github.com/SharedCode/parallels/database/repository"
 import "os"
 
-const defaultGroup = "1"
-
 func TestUpsert(t *testing.T) {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -23,7 +21,7 @@ func TestUpsert(t *testing.T) {
 }
 
 func upsertData(repo repository.Repository) repository.Result {
-	rs := repo.Set(*repository.NewKeyValue(defaultGroup, "K1", []byte("testV")))
+	rs := repo.Set(*repository.NewKeyValue("0", "K1", []byte("testV")))
 	return rs
 }
 
@@ -41,7 +39,7 @@ func TestRead(t *testing.T) {
 	// ensure we have data to read
 	//upsertData(repo)
 
-	r,rs := repo.Get(defaultGroup, "K1")
+	r,rs := repo.Get("0", "K1")
 	if r != nil {
 		if string(r[0].Value) != "testV" {
 			t.FailNow()
@@ -68,11 +66,11 @@ func TestDelete(t *testing.T) {
 	// ensure we have data to read
 	upsertData(repo)
 
-	rs := repo.Remove(defaultGroup, "K1")
+	rs := repo.Remove("0", "K1")
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
-	gr,rs := repo.Get(defaultGroup, "K1")
+	gr,rs := repo.Get("0", "K1")
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
@@ -99,7 +97,7 @@ func TestNavigation(t *testing.T) {
 	}
 
 	// navigate to retrieve 1st "batch".
-	r,rs := repoSet.NavigableStore.Navigate(defaultGroup, repository.Filter{})
+	r,rs := repoSet.NavigableStore.Navigate("0", repository.Filter{})
 	if rs.Error != nil {
 		t.Error(rs.Error)
 	}
@@ -131,11 +129,11 @@ func TestNavigableDelete(t *testing.T) {
 	// ensure we have data to read
 	upsertData(repo)
 
-	rs := repo.Remove(defaultGroup, "K1")
+	rs := repo.Remove("0", "K1")
 	if !rs.IsSuccessful() {
 		t.Error(rs.Error)
 	}
-	r,rs := repo.Get(defaultGroup, "K1")
+	r,rs := repo.Get("0", "K1")
 	if rs.Error != nil {
 		t.Error(rs.Error)
 	}

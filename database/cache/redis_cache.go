@@ -41,14 +41,14 @@ func (repo RedisCache) Get(group string, keys ...string) ([]repository.KeyValue,
 		return nil, repository.Result{}
 	}
 	if e != nil {
-		return nil, repository.Result{Error: e, Details: cmdErr}
+		return nil, repository.Result{Error: e, ErrorDetails: cmdErr}
 	}
 	// process all returned results from the Server.
 	var values []repository.KeyValue
 	for k, v := range m {
 		res, e := v.Result()
 		if e != nil && e != redis.Nil {
-			return nil, repository.Result{Error: e, Details: cmdErr}
+			return nil, repository.Result{Error: e, ErrorDetails: cmdErr}
 		}
 		cmdErr = nil
 		if values == nil {
@@ -56,7 +56,7 @@ func (repo RedisCache) Get(group string, keys ...string) ([]repository.KeyValue,
 		}
 		values = append(values, *repository.NewKeyValue(group, k, []byte(res)))
 	}
-	return values, repository.Result{Details: cmdErr}
+	return values, repository.Result{ErrorDetails: cmdErr}
 }
 
 // Remove a set of entries from the cache.
@@ -67,7 +67,7 @@ func (repo RedisCache) Remove(group string, keys ...string) repository.Result {
 	}
 	// execute the batched deletes.
 	cmdErr, e := pipeline.Exec()
-	return repository.Result{Error: e, Details: cmdErr}
+	return repository.Result{Error: e, ErrorDetails: cmdErr}
 }
 
 func extractError(e error, cmdErr []redis.Cmder) repository.Result {
@@ -78,9 +78,9 @@ func extractError(e error, cmdErr []redis.Cmder) repository.Result {
 				return repository.Result{}
 			}
 		}
-		e = fmt.Errorf("Error was encountered while working on the batch. See Details for more info")
+		e = fmt.Errorf("Error was encountered while working on the batch. See ErrorDetails for more info")
 	}
-	return repository.Result{Error: e, Details: cmdErr}
+	return repository.Result{Error: e, ErrorDetails: cmdErr}
 }
 
 func format(group string, key string) string { return fmt.Sprintf("%d_%s", group, key) }

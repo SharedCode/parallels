@@ -6,9 +6,9 @@ import "os"
 import "encoding/json"
 import "github.com/SharedCode/parallels/database/repository"
 
-type GroupType string
+type AlbumType string
+
 const (
-	Unclassified = ""
 	Album = "album"
 	Checkpoint = "checkpoint"
 )
@@ -76,4 +76,4 @@ func TestBasic(t *testing.T) {
 	}
 }
 
-var albumXML = []byte(`Blob data`)
+var albumXML = []byte(`foo bar`)

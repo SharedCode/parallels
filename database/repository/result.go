@@ -3,11 +3,11 @@ package repository
 type Result struct {
 	// Error is the summary level error.
 	Error error
-	// Details contains the details of the error.
+	// ErrorDetails contains the details of the error.
 	// Sample values assigned are array of UpsertFailDetail,
 	// array of DeleteFailDetail if result means partial failure
 	// on Set or Remove, or any 3rd party details/error info.
-	Details interface{}
+	ErrorDetails interface{}
 }
 
 type UpsertFailDetail struct {
