@@ -1,23 +1,23 @@
-package cache
+package redis
 
 import "fmt"
 import "github.com/go-redis/redis"
 import "github.com/SharedCode/parallels/database/repository"
 
-// RedisCache implementation for Redis based caching.
-type RedisCache struct {
-	redisConnection Connection
+// cache implementation for Redis based caching.
+type cache struct {
+	redisConnection connection
 }
 
-// NewRedisCache instantiates a cache Repository.
-func NewRedisCache(options Options) RedisCache {
-	return RedisCache{
+// NewCache instantiates a cache Repository.
+func NewCache(options Options) cache {
+	return cache{
 		redisConnection: newClient(options),
 	}
 }
 
 // Set a set of entries to the cache.
-func (repo RedisCache) Set(kvps ...repository.KeyValue) repository.Result {
+func (repo cache) Set(kvps ...repository.KeyValue) repository.Result {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	expiration := repo.redisConnection.Options.GetDuration()
 	for i := 0; i < len(kvps); i++ {
@@ -29,7 +29,7 @@ func (repo RedisCache) Set(kvps ...repository.KeyValue) repository.Result {
 }
 
 // Get retrieves a set of entries from the cache.
-func (repo RedisCache) Get(group string, keys ...string) ([]repository.KeyValue, repository.Result) {
+func (repo cache) Get(group string, keys ...string) ([]repository.KeyValue, repository.Result) {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	m := map[string]*redis.StringCmd{}
 	for i := 0; i < len(keys); i++ {
@@ -60,7 +60,7 @@ func (repo RedisCache) Get(group string, keys ...string) ([]repository.KeyValue,
 }
 
 // Remove a set of entries from the cache.
-func (repo RedisCache) Remove(group string, keys ...string) repository.Result {
+func (repo cache) Remove(group string, keys ...string) repository.Result {
 	pipeline := repo.redisConnection.Client.Pipeline()
 	for i := 0; i < len(keys); i++ {
 		pipeline.Del(format(group, keys[i]))

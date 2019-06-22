@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/SharedCode/parallels/database/cache"
+	"github.com/SharedCode/parallels/database/redis"
 	"github.com/SharedCode/parallels/database/cassandra"
 	"github.com/SharedCode/parallels/database/repository"
 )
@@ -28,6 +28,6 @@ func NewRepository(configuration Configuration) (repository.Repository, error) {
 	if e != nil {
 		return nil, e
 	}
-	cache := cache.NewRedisCache(configuration.RedisConfig)
+	cache := redis.NewCache(configuration.RedisConfig)
 	return repository.NewL1L2CacheSync(cache, repo), nil
 }

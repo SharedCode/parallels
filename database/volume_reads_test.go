@@ -8,11 +8,7 @@ import "os"
 import "github.com/SharedCode/parallels/database/repository"
 import "github.com/SharedCode/parallels/database/cassandra"
 
-const count = 10000
-
-// High volume upserts "test"! 'the DB passed with flying colors, per "performance" expectations. :)
-
-func TestVolumeUpserts(t *testing.T) {
+func TestVolumeReads(t *testing.T) {
 	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -24,20 +20,19 @@ func TestVolumeUpserts(t *testing.T) {
 		t.Error(e)
 	}
 
-   fmt.Printf("Performing %d upserts test...\n", count)
+   fmt.Printf("Performing %d reads test...\n", count)
 
    const batchSize = 1000
-   batch := make([]repository.KeyValue, 0, batchSize)
-   ch := make(chan []repository.KeyValue)
+   batch := make([]string, 0, batchSize)
+   ch := make(chan []string)
    var wg sync.WaitGroup
    go func(){
       for i := 1; i < count; i++ {
-         data := albumXML
-         batch = append(batch, *repository.NewKeyValue(Album, fmt.Sprintf("%d",i), data))
+         batch = append(batch, fmt.Sprintf("%d",i))
          if len(batch) >= batchSize{
             wg.Add(1)
             ch <- batch
-            batch = make([]repository.KeyValue, 0, batchSize)
+            batch = make([]string, 0, batchSize)
          }
       }
       // upsert the last part of the batch
@@ -48,21 +43,24 @@ func TestVolumeUpserts(t *testing.T) {
       close(ch)
    }()
 
-   sinker(ch, repoSet, &wg)
+   reader(ch, repoSet, &wg)
    wg.Wait()
    fmt.Println("Completed volume upserts, exitting.")
 }
 
-var index int
-func sinker(ch chan []repository.KeyValue, repo repository.RepositorySet, wg *sync.WaitGroup) {
+func reader(ch chan []string, repo repository.RepositorySet, wg *sync.WaitGroup) {
    for batch := range ch {
       index++
-      f := func(i int, b []repository.KeyValue){
+      f := func(i int, keys []string){
          defer wg.Done()
          for i2 := 0; i2 < 10; i2++ {
-            rs := repo.Store.Set(b...)
+            kv,rs := repo.Store.Get(Album, keys...)
             if rs.IsSuccessful() {
-               fmt.Printf("Successful upsert batch# %d\n", i)
+               if len(kv) != len(keys){
+                  fmt.Printf("Failed, expected item count %d, got %d\n", len(keys), len(kv))
+               } else {
+                  fmt.Printf("Successful read batch# %d\n", i)
+               }
                return
             }
             if rs.ErrorDetails != nil{

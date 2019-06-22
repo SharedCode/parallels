@@ -6,7 +6,7 @@ import "github.com/gocql/gocql"
 import "github.com/SharedCode/parallels/database/repository"
 
 type cassandraStore struct {
-	connection Connection
+	connection connection
 	storeName  string
 }
 
@@ -18,7 +18,9 @@ func NewRepository(config Config) (repository.Repository, error) {
 }
 
 func CloseSession() {
-	if globalSession == nil{return}
+	if globalSession == nil {
+		return
+	}
 	globalSession.Close()
 }
 
@@ -115,7 +117,7 @@ func (repo cassandraStore) Remove(group string, keys ...string) repository.Resul
 		}
 	}
 
-	if failedItems == nil || len(failedItems) == 0{
+	if failedItems == nil || len(failedItems) == 0 {
 		return repository.Result{}
 	}
 	return repository.Result{
@@ -170,7 +172,7 @@ func newRepository(config Config, navigableStore bool) (cassandraStore, error) {
 	if config.NavigableTableName != "" {
 		storeNameNavigableLiteral = config.NavigableTableName
 	}
-	c, e := GetConnection(config)
+	c, e := getConnection(config)
 	sn := storeNameLiteral
 	if navigableStore {
 		sn = storeNameNavigableLiteral

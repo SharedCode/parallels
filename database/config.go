@@ -2,15 +2,15 @@ package database
 
 import (
 	"github.com/go-redis/redis"
-	"github.com/SharedCode/parallels/database/cache"
+	rediscache "github.com/SharedCode/parallels/database/redis"
 	"github.com/SharedCode/parallels/database/cassandra"
 	"encoding/json"
 	"io/ioutil"
 )
 
-// Configuration contains caching (redis) and backend cassandra (e.g. Cassandra) host parameters.
+// Configuration contains caching (redis) and backend store (e.g. Cassandra) host parameters.
 type Configuration struct {
-	RedisConfig     cache.Options
+	RedisConfig     rediscache.Options
 	CassandraConfig cassandra.Config
 }
 
