@@ -31,3 +31,8 @@ func NewRepository(configuration Configuration) (repository.Repository, error) {
 	cache := redis.NewCache(configuration.RedisConfig)
 	return repository.NewL1L2CacheSync(cache, repo), nil
 }
+
+// CloseSession closes all global Sessions that are opened.
+func CloseSession(){
+	cassandra.CloseSession()
+}

@@ -23,7 +23,6 @@ func (repo l1l2Store) Set(kvps ...KeyValue) Result {
 		e2 := repo.L1Cache.Set(kvps...)
 		if !e2.IsSuccessful() {
 			// delete from L1 cache so succeeding "gets" will reload from L2 Cache.
-			// intentionally ignore errors on L1 cache delete, for now.
 			repo.deleteFromL1Cache(kvps...)
 		}
 		return e
@@ -40,9 +39,12 @@ func (repo l1l2Store) Set(kvps ...KeyValue) Result {
 			}
 			nkvps = append(nkvps, d)
 		}
-		// sync L1 Cache with items that succeeded to L2 Cache upsert,
-		// intentionally ignore errors on L1 Cache.
-		repo.L1Cache.Set(nkvps...)
+		// sync L1 Cache with items that succeeded to L2 Cache upsert
+		e2 := repo.L1Cache.Set(nkvps...)
+		if !e2.IsSuccessful() {
+			// delete from L1 cache so succeeding "gets" will reload from L2 Cache.
+			repo.deleteFromL1Cache(nkvps...)
+		}
 	}
 	return e
 }
@@ -58,8 +60,11 @@ func (repo l1l2Store) Get(group string, keys ...string) ([]KeyValue, Result) {
 	}
 	if result.IsSuccessful() {
 		// sync up L1 cache.
-		// todo: do we want to handle error on L1 cache ? prove it, then prolly remove from cache the "set"..
-		repo.L1Cache.Set(kvps...)
+		r2 := repo.L1Cache.Set(kvps...)
+		if !r2.IsSuccessful(){
+			// if failed to set in L1, remove from L1 the set so succeeding get will just reload to cache.
+			repo.L1Cache.Remove(group, keys...)
+		}
 	}
 	return kvps, result
 }
@@ -83,7 +88,6 @@ func (repo l1l2Store) Remove(group string, keys ...string) Result {
 			nkeys = append(nkeys, k)
 		}
 		// sync L1 Cache with items that succeeded to L2 Cache delete,
-		// intentionally ignore errors on L1 Cache.
 		repo.L1Cache.Remove(group, nkeys...)
 	}
 	return result

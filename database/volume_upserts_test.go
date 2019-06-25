@@ -6,7 +6,6 @@ import "sync"
 import "time"
 import "os"
 import "github.com/SharedCode/parallels/database/repository"
-import "github.com/SharedCode/parallels/database/cassandra"
 
 const count = 10000
 
@@ -19,7 +18,7 @@ func TestVolumeUpserts(t *testing.T) {
 	}
 	var config, _ = LoadConfiguration(dir + "/config.json")
    repoSet, e := NewRepositorySet(config)
-   defer cassandra.CloseSession()
+   defer CloseSession()
 	if e != nil {
 		t.Error(e)
 	}

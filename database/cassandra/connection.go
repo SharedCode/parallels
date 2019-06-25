@@ -37,6 +37,18 @@ func getConnection(config Config) (*connection, error) {
 var globalSession *gocql.Session
 var locker sync.Mutex
 
+// CloseSession closes the global Session if it is open.
+func CloseSession(){
+	if globalSession == nil {return}
+	locker.Lock()
+	defer locker.Unlock()
+	if globalSession == nil{ return}
+	if !globalSession.Closed(){
+		globalSession.Close()
+	}
+	globalSession = nil
+}
+
 func (conn *connection) getSession() (*gocql.Session, error) {
 	if globalSession != nil && !globalSession.Closed() {
 		return globalSession, nil

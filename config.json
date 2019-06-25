@@ -1,0 +1,12 @@
+
+{
+    "RedisConfig":{},
+    "CassandraConfig":{
+        "ClusterHosts":["localhost"],
+        "Keyspace": "store",
+        "Consistency": "LOCAL_ONE",
+        "TableName": "key_value",
+        "NavigableTableName": "key_value_navigable",
+        "#Port": 9042
+    }
+}

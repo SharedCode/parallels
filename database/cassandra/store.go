@@ -17,13 +17,6 @@ func NewRepository(config Config) (repository.Repository, error) {
 	return newRepository(config, false)
 }
 
-func CloseSession() {
-	if globalSession == nil {
-		return
-	}
-	globalSession.Close()
-}
-
 func (repo cassandraStore) Set(kvps ...repository.KeyValue) repository.Result {
 	sql := fmt.Sprintf("UPDATE %s SET value=?, updated=?, is_del=false WHERE group=? AND key=?", repo.storeName)
 	now := time.Now()
