@@ -42,6 +42,7 @@ func NewRunner(c repository.Repository, dispatcher Processor) Runner{
 	}
 }
 
+
 func (runner Runner) ScatterAndGather(batchActionData [][]byte, actionName string) (chan ActionResult,error){
 	results,e := runner.Scatter(batchActionData, actionName)
 	if e != nil{
