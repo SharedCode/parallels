@@ -8,7 +8,7 @@ import "os"
 import "github.com/SharedCode/parallels/database"
 import "github.com/SharedCode/parallels/database/repository"
 
-const count = 9999999
+const count = 999999
 
 // High volume upserts "test"! 'the DB passed with flying colors, per "performance" expectations. :)
 
@@ -71,7 +71,7 @@ func TestParallelFor(t *testing.T) {
    fmt.Println("Completed volume upserts, exitting.")
 }
 
-func TestParallelFor(t *testing.T) {
+func TestParallelForPipeline(t *testing.T) {
 	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -91,13 +91,14 @@ func TestParallelFor(t *testing.T) {
       ctr := 0
       return func()(interface{},bool){
          ctr++
+         fmt.Printf("sourcer batch # %d.\n", ctr)
          if ctr > count{
             return nil,true
          }
          batch := make([]repository.KeyValue, 0, batchSize)
          for i := 0; i < batchSize; i++ {
             data := "foobarGroup"
-            batch = append(batch, *repository.NewKeyValue(data, fmt.Sprintf("%d",i), []byte(data)))
+            batch = append(batch, *repository.NewKeyValue(data, fmt.Sprintf("%d",ctr+i), []byte(data)))
          }
          return batch,false
       }
@@ -120,6 +121,7 @@ func TestParallelFor(t *testing.T) {
       }
       fmt.Printf("Error persisted for 10 times, giving up\n")
    }
-   SourceSink(sourcer(), sinker)
+   ParallelForPipeline(sourcer(), sinker)
+   //PipelineParallelForSink(sourcer(), sinker)
    fmt.Println("Completed volume upserts, exitting.")
 }
