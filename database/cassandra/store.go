@@ -129,12 +129,60 @@ func (repo cassandraStore) Navigate(group string, filter repository.Filter) ([]r
 		return nil, repository.Result{Error: e}
 	}
 
-	sql := "SELECT key, value, is_del FROM %s WHERE group=? AND key > ?"
-	if filter.LessThanKey {
-		sql = "SELECT key, value, is_del FROM %s WHERE group=? AND key < ?"
+	var sql string
+
+	// generate proper CQL statement based on filter expression received.
+	var noBoundUpperBoundLowerBoundOrBoth int
+	if filter.UpperboundKey == "" && filter.LowerboundKey == "" {
+		// select starting from the 1st item in DB. > empty string will 
+		// match with valid 1st item per string sort order.
+		sql = "SELECT key, value, is_del FROM %s WHERE group=? AND key > ''"
+	} else if filter.UpperboundKey != "" && filter.LowerboundKey != "" {
+		noBoundUpperBoundLowerBoundOrBoth = 1
+		if filter.UpperboundKeyInclusive{
+			sql = "SELECT key, value, is_del FROM %s WHERE group=? AND key >= ?"
+		} else {
+			sql = "SELECT key, value, is_del FROM %s WHERE group=? AND key > ?"
+		}
+		if filter.LowerboundKeyInclusive{
+			sql += " AND key <= ?"
+		} else {
+			sql += " AND key < ?"
+		}
+	} else if filter.UpperboundKey != "" && filter.LowerboundKey == "" {
+		noBoundUpperBoundLowerBoundOrBoth = 2
+		if filter.UpperboundKeyInclusive{
+			sql = "SELECT key, value, is_del FROM %s WHERE group=? AND key >= ?"
+		} else {
+			sql = "SELECT key, value, is_del FROM %s WHERE group=? AND key > ?"
+		}
+	} else if filter.UpperboundKey == "" && filter.LowerboundKey != "" {
+		noBoundUpperBoundLowerBoundOrBoth = 3
+		if filter.LowerboundKeyInclusive{
+			sql = "SELECT key, value, is_del FROM %s WHERE group=? AND key <= ?"
+		} else {
+			sql = "SELECT key, value, is_del FROM %s WHERE group=? AND key < ?"
+		}
 	}
+	// apply the max count limit condition.
+	if filter.MaxCountLimit > 0 {
+		sql += fmt.Sprintf(" LIMIT %d", filter.MaxCountLimit)
+	}
+
 	sql = fmt.Sprintf(sql, repo.storeName)
-	iter := session.Query(sql, group, filter.Key).Iter()
+	var iter *gocql.Iter
+
+	switch(noBoundUpperBoundLowerBoundOrBoth){
+	case 0:	// no upper no lower bound keys
+		iter = session.Query(sql, group).Iter()
+	case 1:	// both upper bound and lower bound keys provided.
+		iter = session.Query(sql, group, filter.UpperboundKey, filter.LowerboundKey).Iter()
+	case 2:	// upper bound key provided.
+		iter = session.Query(sql, group, filter.UpperboundKey).Iter()
+	case 3:	// lower bound key provided.
+		iter = session.Query(sql, group, filter.LowerboundKey).Iter()
+	}
+
 	var kvps []repository.KeyValue
 	m := map[string]interface{}{}
 	for iter.MapScan(m) {
@@ -166,6 +214,9 @@ func newRepository(config Config, navigableStore bool) (cassandraStore, error) {
 		storeNameNavigableLiteral = config.NavigableTableName
 	}
 	c, e := getConnection(config)
+	if e != nil {
+		return cassandraStore{},e
+	}
 	sn := storeNameLiteral
 	if navigableStore {
 		sn = storeNameNavigableLiteral

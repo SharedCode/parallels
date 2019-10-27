@@ -5,8 +5,7 @@ import (
 	rediscache "github.com/SharedCode/parallels/database/redis"
 	"github.com/SharedCode/parallels/database/cassandra"
 	"encoding/json"
-	"io/ioutil"
-)
+	"io/ioutil")
 
 // Configuration contains caching (redis) and backend store (e.g. Cassandra) host parameters.
 type Configuration struct {

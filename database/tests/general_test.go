@@ -1,4 +1,4 @@
-package database
+package tests
 
 import "fmt"
 import "testing"

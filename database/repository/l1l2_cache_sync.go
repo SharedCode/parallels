@@ -119,7 +119,7 @@ func (repo l1l2Store) deleteFromL1Cache(kvps ...KeyValue) Result {
 	if len(errors) == 0 {
 		return Result{}
 	}
-	return Result{Error: fmt.Errorf("Remove from cache encountered failure, see Result.ErrorDetails"), ErrorDetails: errors}
+	return Result{Error: fmt.Errorf("Remove from L1 cache encountered failure, see Result.ErrorDetails"), ErrorDetails: errors}
 }
 
 func itemExists(kvp KeyValue, kvps []UpsertFailDetail) bool {

@@ -1,15 +1,16 @@
-package database
+package tests
 
 import "testing"
 import "os"
+import "github.com/SharedCode/parallels/database"
 
 func TestNullUpsert(t *testing.T) {
 	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-	repo, e := NewRepository(config)
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+	repo, e := database.NewRepository(config)
 	if e != nil {
 		t.Error(e)
 	}
@@ -24,8 +25,8 @@ func TestNullGet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-	repo, e := NewRepository(config)
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+	repo, e := database.NewRepository(config)
 	if e != nil {
 		t.Error(e)
 	}
@@ -40,8 +41,8 @@ func TestNullDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-	repo, e := NewRepository(config)
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+	repo, e := database.NewRepository(config)
 	if e != nil {
 		t.Error(e)
 	}

@@ -1,4 +1,4 @@
-package database
+package tests
 
 import "fmt"
 import "testing"
@@ -6,15 +6,17 @@ import "sync"
 import "time"
 import "os"
 import "github.com/SharedCode/parallels/database/repository"
+import "github.com/SharedCode/parallels/database"
+import "github.com/SharedCode/parallels"
 
 func TestVolumeReads(t *testing.T) {
 	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-   repoSet, e := NewRepositorySet(config)
-   defer CloseSession()
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+   repoSet, e := database.NewRepositorySet(config)
+   defer database.CloseSession()
 	if e != nil {
 		t.Error(e)
 	}
@@ -48,10 +50,16 @@ func TestVolumeReads(t *testing.T) {
 }
 
 func reader(ch chan []string, repo repository.RepositorySet, wg *sync.WaitGroup) {
+   var ctr int
+   var index int
    for batch := range ch {
+      ctr++
       index++
       f := func(i int, keys []string){
-         defer wg.Done()
+         defer func(){
+            wg.Done()
+            ctr--
+         }()
          for i2 := 0; i2 < 10; i2++ {
             kv,rs := repo.Store.Get(Album, keys...)
             if rs.IsSuccessful() {
@@ -71,7 +79,7 @@ func reader(ch chan []string, repo repository.RepositorySet, wg *sync.WaitGroup)
          }
          fmt.Printf("Error persisted for 10 times, giving up\n")
       }
-      if index%25 == 0{
+      if ctr > parallels.DefaultThreadCountThreshold{
          // perform synchronous call every 25(!) threads to prevent thread over-allocation.
          // hacky way of thread mgmt in a "test" script. :)
          f(index, batch)

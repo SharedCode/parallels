@@ -1,16 +1,17 @@
-package database
+package tests
 
 import "testing"
-import "github.com/SharedCode/parallels/database/repository"
 import "os"
+import "github.com/SharedCode/parallels/database"
+import "github.com/SharedCode/parallels/database/repository"
 
 func TestUpsert(t *testing.T) {
 	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-	repo, e := NewRepository(config)
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+	repo, e := database.NewRepository(config)
 	if e != nil {
 		t.Error(e)
 	}
@@ -30,8 +31,8 @@ func TestRead(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-	repo, e := NewRepository(config)
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+	repo, e := database.NewRepository(config)
 	if e != nil {
 		t.Error(e)
 	}
@@ -58,8 +59,8 @@ func TestDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-	repo, e := NewRepository(config)
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+	repo, e := database.NewRepository(config)
 	if e != nil {
 		t.Error(e)
 	}
@@ -84,8 +85,8 @@ func TestNavigation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-	repoSet, e := NewRepositorySet(config)
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+	repoSet, e := database.NewRepositorySet(config)
 	if e != nil {
 		t.Error(e)
 	}
@@ -120,8 +121,8 @@ func TestNavigableDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var config, _ = LoadConfiguration(dir + "/config.json")
-	repoSet, e := NewRepositorySet(config)
+	var config, _ = database.LoadConfiguration(dir + "/config.json")
+	repoSet, e := database.NewRepositorySet(config)
 	if e != nil {
 		t.Error(e)
 	}
