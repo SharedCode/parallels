@@ -19,6 +19,7 @@ func NewCache(options Options) cache {
 // Set a set of entries to the cache.
 func (repo cache) Set(kvps ...repository.KeyValue) repository.Result {
 	pipeline := repo.redisConnection.Client.Pipeline()
+	defer pipeline.Close()
 	expiration := repo.redisConnection.Options.GetDuration()
 	for i := 0; i < len(kvps); i++ {
 		pipeline.Set(format(kvps[i].Group, kvps[i].Key), kvps[i].Value, expiration)
@@ -31,6 +32,7 @@ func (repo cache) Set(kvps ...repository.KeyValue) repository.Result {
 // Get retrieves a set of entries from the cache.
 func (repo cache) Get(group string, keys ...string) ([]repository.KeyValue, repository.Result) {
 	pipeline := repo.redisConnection.Client.Pipeline()
+	defer pipeline.Close()
 	m := map[string]*redis.StringCmd{}
 	for i := 0; i < len(keys); i++ {
 		m[keys[i]] = pipeline.Get(format(group, keys[i]))
@@ -62,6 +64,7 @@ func (repo cache) Get(group string, keys ...string) ([]repository.KeyValue, repo
 // Remove a set of entries from the cache.
 func (repo cache) Remove(group string, keys ...string) repository.Result {
 	pipeline := repo.redisConnection.Client.Pipeline()
+	defer pipeline.Close()
 	for i := 0; i < len(keys); i++ {
 		pipeline.Del(format(group, keys[i]))
 	}

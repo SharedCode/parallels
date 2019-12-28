@@ -33,6 +33,13 @@ func newClient(options Options) connection {
 	return c
 }
 
+// Close the redis client connection.
+func (conn *connection) Close(){
+	if conn.Client == nil {return}
+	conn.Client.Close()
+	conn.Client = nil
+}
+
 // ping tests connectivity for redis (PONG should be returned)
 func (connection connection) ping() error {
 	pong, err := connection.Client.Ping().Result()
